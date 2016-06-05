@@ -1,7 +1,7 @@
 module Osobot
   class Game
     def initialize size, player, opponent
-      @board = Array.new(size, Array.new(size))
+      @board = Array.new(size) { Array.new(size) }
       @player = player
       @opponent = opponent
       @score = 0
@@ -9,6 +9,18 @@ module Osobot
     end
 
     attr_reader :board, :score, :player, :opponent
+
+    def start
+      new_turn
+    end
+
+    def new_turn
+      if @turn_first
+        place player, *player.turn(self)
+      else
+        place opponent, *opponent.turn(self)
+      end
+    end
 
     def can_place? i, j
       board[i][j].nil?
@@ -20,12 +32,18 @@ module Osobot
         @score = score_if who, i, j, letter
       end
 
-      turn_first = !turn_first
+      @turn_first = !@turn_first
 
-      if turn_first
-        player.turn
+      if board.any?{ |row| row.any? &:nil? } # if there are moves left
+        new_turn
       else
-        opponent.turn
+        if score > 0
+          "Player 1 wins!"
+        elsif score < 0
+          "Player 2 wins!"
+        else
+          "It's a draw!"
+        end
       end
     end
 
@@ -38,20 +56,35 @@ module Osobot
       directions, amplitude = if letter == S
         [ [[1, 1], [1, 0], [1, -1], [0, 1]], 1 ]
       else
-        [ [1, 0, -1].product [1, 0, -1], 2 ]
+        all = [1, 0, -1].product([1, 0, -1])
+        all.delete [0, 0]
+        [ all, 2 ]
       end
 
+      prev = board[i][j]
+      board[i][j] = letter
       directions.each do |direction|
-        start_i = i - amplitude * direction[0]
-        start_j = j - amplitude * direction[1]
+        start_i = (i - amplitude * direction[0]) % board.size
+        start_j = (j - amplitude * direction[1]) % board.size
         difference += sign if check_oso direction, start_i, start_j
       end
+      board[i][j] = prev
 
       score + difference
     end
 
+    def to_s
+      board_text = (0 ... board.size).map do |row|
+        inner = board[row].map{ |e| e.nil? ? " " : e }.join(" ")
+        "#{row} #{inner}\n"
+      end.join
+
+      "Current score: #{score}\n" +
+      "  " + (0 ... board.size).to_a.join(" ") + "\n" + board_text
+    end
+
     private
-    def check_oso direction, start_i, start_j
+    def check_oso direction, i, j
       board[i][j] == O &&
       board[i + direction[0]][j + direction[1]] == S &&
       board[i + 2 * direction[0]][j + 2 * direction[1]] == O
