@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "osobot"
+
+the_user = Osobot::User.new
+ the_bot = Osobot::NaiveBot.new
+# the_bot = Osobot::User.new
+the_game = Osobot::Game.new 8, the_user, the_bot
+puts the_game.start
