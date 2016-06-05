@@ -5,3 +5,5 @@ module Osobot
   O = :o
   S = :s
 end
+
+Dir[__dir__ + '/osobot/*.rb'].each { |file| require file }
