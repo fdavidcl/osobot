@@ -14,9 +14,9 @@ module Osobot
       end
       letter = letter == "o" ? O : S
 
-      print "Your mode (row) > "
+      print "Your move (row) > "
       row = gets.chomp.to_i
-      print "Your mode (col) > "
+      print "Your move (col) > "
       col = gets.chomp.to_i
 
       [row, col, letter]

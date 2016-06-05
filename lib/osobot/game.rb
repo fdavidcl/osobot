@@ -86,8 +86,8 @@ module Osobot
     private
     def check_oso direction, i, j
       board[i][j] == O &&
-      board[i + direction[0]][j + direction[1]] == S &&
-      board[i + 2 * direction[0]][j + 2 * direction[1]] == O
+      board[(i + direction[0]) % board.size][(j + direction[1]) % board.size] == S &&
+      board[(i + 2 * direction[0]) % board.size][(j + 2 * direction[1]) % board.size] == O
     end
 
     # We could disallow wrap via something like this:
