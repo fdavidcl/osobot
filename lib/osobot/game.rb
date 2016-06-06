@@ -11,7 +11,18 @@ module Osobot
     attr_reader :board, :score, :player, :opponent
 
     def start
-      new_turn
+      while board.any?{ |row| row.any? &:nil? }
+        new_turn
+        @turn_first = !@turn_first
+      end
+
+      if score > 0
+        "Player 1 wins!"
+      elsif score < 0
+        "Player 2 wins!"
+      else
+        "It's a draw!"
+      end
     end
 
     def new_turn
@@ -30,20 +41,6 @@ module Osobot
       if can_place? i, j
         board[i][j] = letter
         @score = score_if who, i, j, letter
-      end
-
-      @turn_first = !@turn_first
-
-      if board.any?{ |row| row.any? &:nil? } # if there are moves left
-        new_turn
-      else
-        if score > 0
-          "Player 1 wins!"
-        elsif score < 0
-          "Player 2 wins!"
-        else
-          "It's a draw!"
-        end
       end
     end
 
@@ -71,6 +68,52 @@ module Osobot
       board[i][j] = prev
 
       score + difference
+    end
+
+    # Simulates a list of movements made by alternating players
+    # starting must be a reference to the first player to move
+    # moves must be an array of triplets [i, j, letter]
+    def simulate starting, moves
+      # Check if all moves are possible
+      raise StandardError, "Bad simulation" unless moves.all?{ |i, j| can_place? i, j }
+
+      # Set player and previous score
+      current = starting
+      prev_score = score
+
+      # Simulate movements
+      moves.each do |move|
+        place current, *move
+        current = starting == player ? opponent : player
+      end
+
+      final_score = score
+
+      # Reset game to its previous state
+      moves.each do |i, j|
+        board[i][j] = nil
+      end
+      @score = prev_score
+
+      final_score
+    end
+
+    def state_if who, i, j, letter
+      new_game = self.clone
+      # Little hack to prevent shallow board clone
+      new_board = board.map{ |row| row.clone }
+      new_game.instance_variable_set("@board", new_board)
+
+      prev = board[i][j]
+      new_game.place who, i, j, letter
+      raise StandardError, "Shit" if prev != board[i][j]
+      new_game
+    end
+
+    def get_available_moves
+      (0 ... board.size).to_a.product((0 ... board.size).to_a, [O, S]).select do |i, j|
+        board[i][j].nil?
+      end
     end
 
     def to_s
